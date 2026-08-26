@@ -8,7 +8,16 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === 'seatbelt';
 const localBindingConfig = {
   main: 'vinext/server/app-router-entry',
   compatibility_flags: ['nodejs_compat'],
-  d1_databases: [],
+  d1_databases: process.env.PHITHANPDF_D1_DATABASE_ID
+    ? [
+      {
+        binding: 'DB',
+        database_name: process.env.PHITHANPDF_D1_DATABASE_NAME ?? 'phithanpdf_analytics',
+        database_id: process.env.PHITHANPDF_D1_DATABASE_ID,
+        migrations_dir: './migrations',
+      },
+    ]
+    : [],
   r2_buckets: [],
 };
 

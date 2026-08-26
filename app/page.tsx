@@ -83,6 +83,9 @@ type ZipEntry = {
   data: Uint8Array;
 };
 
+type UsageStatus = 'success' | 'error';
+type UsageToolId = ToolMode | 'site-visit';
+
 const annotationSymbols = ['✓', 'X', '□', '☑', '★', '•', '○', '■', '▲', '→'];
 const annotationColors = ['#0f172a', '#000000', '#1d4ed8', '#dc2626'];
 
@@ -1501,6 +1504,38 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const visitKey = 'phithanpdf-usage-visit-tracked';
+    if (sessionStorage.getItem(visitKey)) {
+      return;
+    }
+
+    sessionStorage.setItem(visitKey, '1');
+    const payload = JSON.stringify({
+      toolId: 'site-visit',
+      status: 'success',
+      fileCount: 0,
+      outputCount: 0,
+      path: window.location.pathname + window.location.hash,
+    });
+
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/usage', new Blob([payload], { type: 'application/json' }));
+        return;
+      }
+
+      void fetch('/api/usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => undefined);
+    } catch {
+      // Usage tracking must never interrupt the visitor.
+    }
+  }, []);
+
+  useEffect(() => {
     return () => {
       downloadResults.forEach((item) => URL.revokeObjectURL(item.url));
     };
@@ -1707,6 +1742,37 @@ export default function Home() {
         fileName: item.fileName,
       }));
     });
+  }
+
+  function trackUsage(
+    toolId: UsageToolId,
+    status: UsageStatus,
+    detail: { fileCount?: number; outputCount?: number; errorCode?: string } = {},
+  ) {
+    const payload = JSON.stringify({
+      toolId,
+      status,
+      fileCount: detail.fileCount ?? files.length,
+      outputCount: detail.outputCount ?? 0,
+      errorCode: detail.errorCode,
+      path: window.location.pathname + window.location.hash,
+    });
+
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon('/api/usage', new Blob([payload], { type: 'application/json' }));
+        return;
+      }
+
+      void fetch('/api/usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => undefined);
+    } catch {
+      // Usage tracking must never interrupt PDF processing.
+    }
   }
 
   async function refreshAnnotatePreview(pageNumber: number) {
@@ -2290,8 +2356,10 @@ export default function Home() {
       const blob = new Blob([mergedBytes], { type: 'application/pdf' });
       setNewDownloads([{ blob, fileName: `รวมไฟล์-${new Date().toISOString().slice(0, 10)}.pdf` }]);
       setSuccess('รวมไฟล์ PDF สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('merge', 'success', { fileCount: files.length, outputCount: 1 });
     } catch {
       setError('ไม่สามารถรวมไฟล์ PDF ได้ กรุณาตรวจสอบว่าไฟล์ไม่เสียหายหรือไม่ได้เข้ารหัส');
+      trackUsage('merge', 'error', { fileCount: files.length, errorCode: 'merge_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2320,8 +2388,10 @@ export default function Home() {
       const blob = new Blob([splitBytes], { type: 'application/pdf' });
       setNewDownloads([{ blob, fileName: `แยกไฟล์-${cleanFileBaseName(sourceFile.name)}.pdf` }]);
       setSuccess('แยกไฟล์ PDF สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('split', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถแยกไฟล์ PDF ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('split', 'error', { fileCount: files.length, errorCode: 'split_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2371,8 +2441,10 @@ export default function Home() {
       const blob = new Blob([organizedBytes], { type: 'application/pdf' });
       setNewDownloads([{ blob, fileName: `จัดหน้า-${cleanFileBaseName(sourceFile.name)}.pdf` }]);
       setSuccess('จัดหน้า PDF สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('organize', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถจัดหน้า PDF ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('organize', 'error', { fileCount: files.length, errorCode: 'organize_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2423,8 +2495,10 @@ export default function Home() {
 
       setNewDownloads(results);
       setSuccess(`แปลง PDF เป็น JPG สำเร็จ ${results.length} ไฟล์ กรุณากดดาวน์โหลดไฟล์`);
+      trackUsage('pdf-to-jpg', 'success', { fileCount: 1, outputCount: results.length });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถแปลง PDF เป็น JPG ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('pdf-to-jpg', 'error', { fileCount: files.length, errorCode: 'pdf_to_jpg_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2462,8 +2536,10 @@ export default function Home() {
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       setNewDownloads([{ blob, fileName: `รูปภาพเป็น-pdf-${new Date().toISOString().slice(0, 10)}.pdf` }]);
       setSuccess('แปลง JPG เป็น PDF สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('jpg-to-pdf', 'success', { fileCount: files.length, outputCount: 1 });
     } catch {
       setError('ไม่สามารถแปลงรูปภาพเป็น PDF ได้ กรุณาตรวจสอบว่าไฟล์รูปภาพไม่เสียหาย');
+      trackUsage('jpg-to-pdf', 'error', { fileCount: files.length, errorCode: 'jpg_to_pdf_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2486,8 +2562,10 @@ export default function Home() {
       const blob = new Blob([docxBytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
       setNewDownloads([{ blob, fileName: `${cleanFileBaseName(sourceFile.name)}.docx` }]);
       setSuccess('แปลง PDF เป็น Word สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('pdf-to-word', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถแปลง PDF เป็น Word ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('pdf-to-word', 'error', { fileCount: files.length, errorCode: 'pdf_to_word_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2510,8 +2588,10 @@ export default function Home() {
       const blob = new Blob([xlsxBytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       setNewDownloads([{ blob, fileName: `${cleanFileBaseName(sourceFile.name)}.xlsx` }]);
       setSuccess('แปลง PDF เป็น Excel สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('pdf-to-excel', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถแปลง PDF เป็น Excel ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('pdf-to-excel', 'error', { fileCount: files.length, errorCode: 'pdf_to_excel_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2534,8 +2614,10 @@ export default function Home() {
       const blob = new Blob([pptxBytes], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
       setNewDownloads([{ blob, fileName: `${cleanFileBaseName(sourceFile.name)}.pptx` }]);
       setSuccess('แปลง PDF เป็น PowerPoint สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('pdf-to-powerpoint', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถแปลง PDF เป็น PowerPoint ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('pdf-to-powerpoint', 'error', { fileCount: files.length, errorCode: 'pdf_to_powerpoint_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2573,8 +2655,10 @@ export default function Home() {
       const blob = new Blob([encryptedBytes], { type: 'application/pdf' });
       setNewDownloads([{ blob, fileName: `ใส่รหัสผ่าน-${cleanFileBaseName(sourceFile.name)}.pdf` }]);
       setSuccess('ใส่รหัสผ่าน PDF สำเร็จแล้ว กรุณาดาวน์โหลดไฟล์และทดสอบเปิดด้วยรหัสผ่านที่ตั้งไว้');
+      trackUsage('password', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถใส่รหัสผ่าน PDF ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('password', 'error', { fileCount: files.length, errorCode: 'password_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2670,8 +2754,10 @@ export default function Home() {
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       setNewDownloads([{ blob, fileName: `เซ็นเอกสาร-${cleanFileBaseName(sourceFile.name)}.pdf` }]);
       setSuccess('เซ็นเอกสาร PDF สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('sign', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถเซ็นเอกสาร PDF ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('sign', 'error', { fileCount: files.length, errorCode: 'sign_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2790,8 +2876,10 @@ export default function Home() {
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       setNewDownloads([{ blob, fileName: `เพิ่มข้อมูล-${cleanFileBaseName(sourceFile.name)}.pdf` }]);
       setSuccess('เพิ่มข้อมูลใน PDF สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('annotate', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถเพิ่มข้อมูลใน PDF ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('annotate', 'error', { fileCount: files.length, errorCode: 'annotate_failed' });
     } finally {
       setIsProcessing(false);
     }
@@ -2886,8 +2974,10 @@ export default function Home() {
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       setNewDownloads([{ blob, fileName: `ใส่ลายน้ำ-${cleanFileBaseName(sourceFile.name)}.pdf` }]);
       setSuccess('ใส่ลายน้ำ PDF สำเร็จแล้ว กรุณากดดาวน์โหลดไฟล์');
+      trackUsage('watermark', 'success', { fileCount: 1, outputCount: 1 });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'ไม่สามารถใส่ลายน้ำ PDF ได้ กรุณาตรวจสอบไฟล์อีกครั้ง');
+      trackUsage('watermark', 'error', { fileCount: files.length, errorCode: 'watermark_failed' });
     } finally {
       setIsProcessing(false);
     }
