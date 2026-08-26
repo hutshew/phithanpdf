@@ -4509,11 +4509,6 @@ export default function Home() {
               <h1 className="text-2xl font-bold tracking-normal text-slate-950">เครื่องมือจัดการ PDF</h1>
             </div>
           </button>
-          <div className="flex flex-wrap gap-2 text-sm text-slate-600">
-            <span className="rounded border border-emerald-200 bg-emerald-50 px-3 py-2 font-semibold text-emerald-700">Public preview</span>
-            <span className="rounded border border-slate-200 bg-slate-50 px-3 py-2">{readyToolCount} เครื่องมือพร้อมใช้</span>
-            <span className="rounded border border-slate-200 bg-slate-50 px-3 py-2">ประมวลผลในเบราว์เซอร์</span>
-          </div>
         </div>
       </header>
 
@@ -4540,7 +4535,7 @@ export default function Home() {
                 {usageSummary.configured ? 'Live' : 'กำลังเตรียมข้อมูล'}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-3 gap-2">
               <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
                 <p className="text-xl font-black text-slate-950">{readyToolCount}</p>
                 <p className="mt-1 text-xs font-semibold text-slate-500">พร้อมใช้</p>
@@ -4549,14 +4544,10 @@ export default function Home() {
                 <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.visits)}</p>
                 <p className="mt-1 text-xs font-semibold text-slate-500">เข้าชม</p>
               </div>
-              <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
+              <a href="/usage" className="rounded bg-white px-3 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#126b8f]/25">
                 <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.successfulRuns)}</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">ใช้งานสำเร็จ</p>
-              </div>
-              <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
-                <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.runsLast24Hours)}</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">24 ชม.</p>
-              </div>
+                <p className="mt-1 text-xs font-semibold text-[#126b8f]">ใช้งานสำเร็จ</p>
+              </a>
             </div>
           </div>
         </div>
