@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "node scripts/copy-pdf-worker.mjs && vinext build",
+    "deploy": "npm run build && wrangler deploy dist/server/index.js --assets=dist/client --compatibility-flag=nodejs_compat",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern public/pdf.worker.mjs"
   },
