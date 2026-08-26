@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, DragEvent, MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { ChangeEvent, DragEvent, MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { degrees, PDFDocument } from 'pdf-lib';
 
 type ToolMode = 'merge' | 'organize' | 'split' | 'pdf-to-jpg' | 'jpg-to-pdf' | 'pdf-to-excel' | 'pdf-to-word' | 'pdf-to-powerpoint' | 'password' | 'sign' | 'annotate' | 'watermark' | 'planned';
@@ -85,6 +85,21 @@ type ZipEntry = {
 
 type UsageStatus = 'success' | 'error';
 type UsageToolId = ToolMode | 'site-visit';
+
+type UsageSummaryRow = {
+  toolId: string;
+  status: UsageStatus;
+  events: number;
+  fileCount?: number;
+  outputCount?: number;
+};
+
+type UsageSummaryState = {
+  configured: boolean;
+  visits: number;
+  successfulRuns: number;
+  runsLast24Hours: number;
+};
 
 const annotationSymbols = ['✓', 'X', '□', '☑', '★', '•', '○', '■', '▲', '→'];
 const annotationColors = ['#0f172a', '#000000', '#1d4ed8', '#dc2626'];
@@ -229,6 +244,10 @@ function formatBytes(bytes: number) {
   }
 
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatUsageCount(value: number) {
+  return new Intl.NumberFormat('th-TH').format(value);
 }
 
 function cleanFileBaseName(name: string) {
@@ -1424,6 +1443,12 @@ export default function Home() {
   const [watermarkImageDataUrl, setWatermarkImageDataUrl] = useState('');
   const [watermarkImageBytes, setWatermarkImageBytes] = useState<ArrayBuffer | null>(null);
   const [watermarkImageType, setWatermarkImageType] = useState<'png' | 'jpg' | null>(null);
+  const [usageSummary, setUsageSummary] = useState<UsageSummaryState>({
+    configured: false,
+    visits: 0,
+    successfulRuns: 0,
+    runsLast24Hours: 0,
+  });
 
   const activeTool = useMemo(
     () => tools.find((tool) => tool.id === activeId) ?? tools[0],
@@ -1490,6 +1515,41 @@ export default function Home() {
     });
   }
 
+  const loadUsageSummary = useCallback(async () => {
+    try {
+      const response = await fetch('/api/usage/summary', { cache: 'no-store' });
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json() as {
+        configured?: boolean;
+        totals?: UsageSummaryRow[];
+        last24Hours?: UsageSummaryRow[];
+      };
+      const totals = Array.isArray(data.totals) ? data.totals : [];
+      const last24Hours = Array.isArray(data.last24Hours) ? data.last24Hours : [];
+      const visits = totals
+        .filter((row) => row.toolId === 'site-visit' && row.status === 'success')
+        .reduce((sum, row) => sum + Number(row.events || 0), 0);
+      const successfulRuns = totals
+        .filter((row) => row.toolId !== 'site-visit' && row.status === 'success')
+        .reduce((sum, row) => sum + Number(row.events || 0), 0);
+      const runsLast24Hours = last24Hours
+        .filter((row) => row.toolId !== 'site-visit' && row.status === 'success')
+        .reduce((sum, row) => sum + Number(row.events || 0), 0);
+
+      setUsageSummary({
+        configured: data.configured === true,
+        visits,
+        successfulRuns,
+        runsLast24Hours,
+      });
+    } catch {
+      // Public counters are informational only.
+    }
+  }, []);
+
   useEffect(() => {
     const syncToolFromHash = () => {
       const nextId = window.location.hash.replace('#', '');
@@ -1506,6 +1566,9 @@ export default function Home() {
   useEffect(() => {
     const visitKey = 'phithanpdf-usage-visit-tracked';
     if (sessionStorage.getItem(visitKey)) {
+      window.setTimeout(() => {
+        void loadUsageSummary();
+      }, 0);
       return;
     }
 
@@ -1521,19 +1584,22 @@ export default function Home() {
     try {
       if (navigator.sendBeacon) {
         navigator.sendBeacon('/api/usage', new Blob([payload], { type: 'application/json' }));
-        return;
+      } else {
+        void fetch('/api/usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+        }).catch(() => undefined);
       }
-
-      void fetch('/api/usage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-        keepalive: true,
-      }).catch(() => undefined);
     } catch {
       // Usage tracking must never interrupt the visitor.
     }
-  }, []);
+
+    window.setTimeout(() => {
+      void loadUsageSummary();
+    }, 500);
+  }, [loadUsageSummary]);
 
   useEffect(() => {
     return () => {
@@ -1761,18 +1827,21 @@ export default function Home() {
     try {
       if (navigator.sendBeacon) {
         navigator.sendBeacon('/api/usage', new Blob([payload], { type: 'application/json' }));
-        return;
+      } else {
+        void fetch('/api/usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+          keepalive: true,
+        }).catch(() => undefined);
       }
-
-      void fetch('/api/usage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-        keepalive: true,
-      }).catch(() => undefined);
     } catch {
       // Usage tracking must never interrupt PDF processing.
     }
+
+    window.setTimeout(() => {
+      void loadUsageSummary();
+    }, 500);
   }
 
   async function refreshAnnotatePreview(pageNumber: number) {
@@ -4460,18 +4529,33 @@ export default function Home() {
             </p>
           </div>
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <div className="grid grid-cols-3 gap-2">
+            <div className="mb-2 flex items-center justify-between gap-3 px-1">
+              <p className="text-xs font-black uppercase text-slate-500">สถิติการใช้งาน</p>
+              <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+                usageSummary.configured
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-slate-200 text-slate-500'
+              }`}
+              >
+                {usageSummary.configured ? 'Live' : 'กำลังเตรียมข้อมูล'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
               <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
                 <p className="text-xl font-black text-slate-950">{readyToolCount}</p>
                 <p className="mt-1 text-xs font-semibold text-slate-500">พร้อมใช้</p>
               </div>
               <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
-                <p className="text-xl font-black text-slate-950">0</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">อัปโหลด server</p>
+                <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.visits)}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">เข้าชม</p>
               </div>
               <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
-                <p className="text-xl font-black text-slate-950">TH</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">ชื่อไฟล์ไทย</p>
+                <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.successfulRuns)}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">ใช้งานสำเร็จ</p>
+              </div>
+              <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
+                <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.runsLast24Hours)}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">24 ชม.</p>
               </div>
             </div>
           </div>
