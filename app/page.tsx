@@ -4491,7 +4491,6 @@ export default function Home() {
               <img className="h-full w-full object-contain" src="/logo-phithan.png" alt="โลโก้บริษัท พิธาน" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-[#126b8f]">ระบบเอกสารภายในกลุ่มบริษัท</p>
               <h1 className="text-2xl font-bold tracking-normal text-slate-950">เครื่องมือจัดการ PDF</h1>
             </div>
           </button>
