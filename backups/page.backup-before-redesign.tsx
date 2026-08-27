@@ -237,50 +237,6 @@ function formatUsageCount(value: number) {
   return new Intl.NumberFormat('th-TH').format(value);
 }
 
-function ToolMark({ toolId, className = '' }: { toolId: string; className?: string }) {
-  const meta: Record<string, { label: string; accent: string; symbol: string; secondary?: string }> = {
-    merge: { label: 'PDF', accent: '#2563eb', symbol: '+', secondary: '#60a5fa' },
-    organize: { label: 'PDF', accent: '#8b5cf6', symbol: '▦', secondary: '#c4b5fd' },
-    split: { label: 'PDF', accent: '#10b981', symbol: '↧', secondary: '#86efac' },
-    'pdf-to-jpg': { label: 'PDF', accent: '#ef4444', symbol: 'JPG', secondary: '#60a5fa' },
-    'jpg-to-pdf': { label: 'JPG', accent: '#f59e0b', symbol: 'PDF', secondary: '#ef4444' },
-    'pdf-to-excel': { label: 'PDF', accent: '#22c55e', symbol: 'X', secondary: '#bbf7d0' },
-    'pdf-to-word': { label: 'PDF', accent: '#2563eb', symbol: 'W', secondary: '#bfdbfe' },
-    'pdf-to-powerpoint': { label: 'PDF', accent: '#ea580c', symbol: 'P', secondary: '#fed7aa' },
-    password: { label: 'PDF', accent: '#0f766e', symbol: '🔒', secondary: '#99f6e4' },
-    watermark: { label: 'PDF', accent: '#3b82f6', symbol: '◌', secondary: '#bfdbfe' },
-    sign: { label: 'PDF', accent: '#7c3aed', symbol: '✎', secondary: '#ddd6fe' },
-    annotate: { label: 'PDF', accent: '#0ea5e9', symbol: 'i', secondary: '#bae6fd' },
-  };
-  const item = meta[toolId] ?? meta.merge;
-
-  return (
-    <span className={`relative inline-grid h-16 w-16 place-items-center ${className}`} aria-hidden="true">
-      <span
-        className="absolute inset-x-2 top-1 h-14 rounded-lg border border-slate-200 bg-white shadow-sm"
-        style={{ boxShadow: '0 10px 22px rgba(15, 23, 42, 0.08)' }}
-      >
-        <span
-          className="absolute right-0 top-0 h-4 w-4 rounded-bl-lg"
-          style={{ backgroundColor: item.secondary ?? '#dbeafe' }}
-        />
-        <span
-          className="absolute left-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-black text-white"
-          style={{ backgroundColor: item.accent }}
-        >
-          {item.label}
-        </span>
-      </span>
-      <span
-        className="relative mt-6 grid min-h-8 min-w-8 place-items-center rounded-lg px-2 text-sm font-black text-white shadow-md"
-        style={{ backgroundColor: item.accent }}
-      >
-        {item.symbol}
-      </span>
-    </span>
-  );
-}
-
 function cleanFileBaseName(name: string) {
   return name.replace(/\.[^.]+$/i, '').replace(/[\\/:*?"<>|]/g, '-').trim() || 'เอกสาร';
 }
@@ -4518,10 +4474,12 @@ export default function Home() {
     );
   }
 
+  const activeVisual = toolVisuals[activeTool.id] ?? toolVisuals.merge;
+
   return (
-    <main className="min-h-screen bg-[#f5f9ff] text-slate-950">
-      <header className="border-b border-blue-100 bg-white/95 shadow-sm shadow-blue-100/40">
-        <div className="mx-auto flex max-w-7xl px-5 py-4 sm:px-8">
+    <main className="min-h-screen bg-[#f4f7fb] text-slate-950">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-5 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
           <button
             type="button"
             onClick={() => selectTool('merge')}
@@ -4539,35 +4497,39 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="border-b border-blue-100 bg-gradient-to-br from-white via-[#f6fbff] to-[#edf6ff]">
-        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-center">
-          <div className="relative z-10">
-            <p className="text-sm font-black uppercase tracking-[0.12em] text-[#126b8f]">PDF Tools Workspace</p>
-            <h2 className="mt-4 max-w-3xl text-4xl font-black tracking-normal text-slate-950 sm:text-5xl">
-              เครื่องมือ <span className="text-blue-600">PDF</span> ครบ จบในที่เดียว
+      <section className="border-b border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-7 sm:px-8 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-end">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#126b8f]">PDF Tools Workspace</p>
+            <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-normal text-slate-950 sm:text-4xl">
+              จัดการเอกสาร PDF ได้ครบในหน้าเดียว
             </h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
               รวมไฟล์ แยกไฟล์ จัดหน้า แปลงไฟล์ ใส่ลายน้ำ เซ็นเอกสาร เพิ่มข้อมูล และตั้งรหัสผ่าน PDF โดยประมวลผลบนเครื่องของผู้ใช้ผ่านเบราว์เซอร์
             </p>
-            <div className="mt-6 grid max-w-md grid-cols-2 gap-3">
-              <div className="rounded-lg border border-blue-100 bg-white px-4 py-4 shadow-md shadow-blue-100/50">
-                <p className="text-xs font-black uppercase text-slate-500">เข้าชม</p>
-                <p className="mt-1 text-2xl font-black text-slate-950">{formatUsageCount(usageSummary.visits)}</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div className="mb-2 flex items-center justify-between gap-3 px-1">
+              <p className="text-xs font-black uppercase text-slate-500">สถิติการใช้งาน</p>
+              <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+                usageSummary.configured
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'bg-slate-200 text-slate-500'
+              }`}
+              >
+                {usageSummary.configured ? 'Live' : 'กำลังเตรียมข้อมูล'}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
+                <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.visits)}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-500">เข้าชม</p>
               </div>
-              <a href="/usage" className="rounded-lg border border-emerald-100 bg-white px-4 py-4 shadow-md shadow-emerald-100/50 transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#126b8f]/25">
-                <p className="text-xs font-black uppercase text-[#126b8f]">ใช้งานสำเร็จ</p>
-                <p className="mt-1 text-2xl font-black text-slate-950">{formatUsageCount(usageSummary.successfulRuns)}</p>
+              <a href="/usage" className="rounded bg-white px-3 py-3 text-center shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#126b8f]/25">
+                <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.successfulRuns)}</p>
+                <p className="mt-1 text-xs font-semibold text-[#126b8f]">ใช้งานสำเร็จ</p>
               </a>
             </div>
-          </div>
-          <div className="relative flex min-h-[260px] items-end justify-center overflow-hidden lg:min-h-[340px]">
-            <div className="absolute inset-x-8 bottom-4 h-28 rounded-full bg-blue-200/40 blur-3xl" aria-hidden="true" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="relative h-full max-h-[330px] w-full object-contain drop-shadow-[0_22px_35px_rgba(37,99,235,0.16)]"
-              src="/pdf-tools-mascots.png"
-              alt="มาสคอตทีม IT สำหรับเครื่องมือ PDF"
-            />
           </div>
         </div>
       </section>
@@ -4575,28 +4537,30 @@ export default function Home() {
       <section className="mx-auto grid max-w-7xl gap-6 px-5 py-7 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-6">
           {toolGroups.map((group) => (
-            <section key={group} className="rounded-lg border border-blue-100 bg-white/90 p-4 shadow-md shadow-blue-100/40">
+            <section key={group}>
               <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 className="text-base font-black tracking-normal text-[#126b8f]">{group}</h2>
-                <span className="h-px flex-1 bg-blue-100" />
+                <h2 className="text-base font-black tracking-normal text-slate-950">{group}</h2>
+                <span className="h-px flex-1 bg-slate-200" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {tools.filter((tool) => toolVisuals[tool.id]?.group === group).map((tool) => {
+                  const visual = toolVisuals[tool.id] ?? toolVisuals.merge;
                   const isActive = activeTool.id === tool.id;
                   return (
                     <button
                       key={tool.id}
                       type="button"
                       onClick={() => selectTool(tool.id)}
-                      className={`group relative flex min-h-[178px] flex-col rounded-lg border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-lg ${
+                      className={`group flex min-h-[154px] flex-col rounded-lg border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md ${
                         isActive
-                          ? 'border-[#126b8f] bg-white shadow-lg shadow-blue-100 ring-2 ring-[#126b8f]/10'
-                          : 'border-blue-100 bg-white shadow-sm shadow-blue-50'
+                          ? 'border-[#126b8f] bg-white shadow-md ring-2 ring-[#126b8f]/10'
+                          : 'border-slate-200 bg-white shadow-sm'
                       }`}
                     >
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <ToolMark toolId={tool.id} />
-                        <span className="text-2xl font-black text-blue-500 opacity-0 transition group-hover:translate-x-1 group-hover:opacity-100">›</span>
+                      <div className="mb-4 flex items-center gap-2">
+                        <span className={`grid h-10 min-w-10 place-items-center rounded border px-2 text-xs font-black ${visual.tone}`}>
+                          {visual.icon}
+                        </span>
                       </div>
                       <h3 className="text-base font-black tracking-normal text-slate-950">{tool.title}</h3>
                       <p className="mt-2 text-sm leading-5 text-slate-600">{tool.description}</p>
@@ -4608,9 +4572,11 @@ export default function Home() {
           ))}
         </div>
 
-        <aside className="rounded-lg border border-blue-100 bg-white p-5 shadow-lg shadow-blue-100/60 lg:sticky lg:top-6 lg:self-start">
+        <aside className="rounded-lg border border-slate-200 bg-white p-5 shadow-lg shadow-slate-200/60 lg:sticky lg:top-6 lg:self-start">
           <div className="flex items-start gap-3">
-            <ToolMark toolId={activeTool.id} className="shrink-0 scale-90" />
+            <span className={`grid h-12 min-w-12 place-items-center rounded-lg border px-2 text-sm font-black ${activeVisual.tone}`}>
+              {activeVisual.icon}
+            </span>
             <div>
               <p className="text-sm font-semibold text-[#126b8f]">เครื่องมือที่เลือก</p>
               <h2 className="mt-1 text-2xl font-black tracking-normal">{activeTool.title}</h2>
