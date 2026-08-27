@@ -10,7 +10,6 @@ type Tool = {
   title: string;
   description: string;
   accepts: string;
-  badge: string;
   fields: string[];
   mode: ToolMode;
 };
@@ -110,7 +109,6 @@ const tools: Tool[] = [
     title: 'รวมไฟล์ PDF',
     description: 'เลือกไฟล์หลายฉบับแล้วรวมเป็นเอกสาร PDF เดียวสำหรับส่งต่อหรือจัดเก็บ',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['ลากวางหรือเลือกไฟล์ PDF หลายไฟล์', 'เปลี่ยนลำดับก่อนรวมไฟล์ได้'],
     mode: 'merge',
   },
@@ -119,7 +117,6 @@ const tools: Tool[] = [
     title: 'จัดหน้า PDF',
     description: 'ลากสลับหน้า หมุนหน้า หรือลบหน้าที่ไม่ต้องการออกจากเอกสาร',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['เลือกและเรียงหน้าด้วยตัวเลขหน้า', 'หมุนหน้าทั้งชุดได้ก่อนดาวน์โหลด'],
     mode: 'organize',
   },
@@ -128,7 +125,6 @@ const tools: Tool[] = [
     title: 'แยกไฟล์ PDF',
     description: 'แยกช่วงหน้าออกเป็นไฟล์ใหม่ หรือแตกทุกหน้าเป็นไฟล์ PDF แยกกัน',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['ระบุช่วงหน้า เช่น 1-3, 7', 'ดาวน์โหลด PDF ที่แยกแล้วได้ทันที'],
     mode: 'split',
   },
@@ -137,7 +133,6 @@ const tools: Tool[] = [
     title: 'แปลง PDF to JPG',
     description: 'แปลงหน้าเอกสาร PDF เป็นรูปภาพ JPG เพื่อแนบในระบบหรือส่งตรวจทาน',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['เลือกช่วงหน้าที่ต้องการแปลง', 'ดาวน์โหลด JPG แยกตามหน้า'],
     mode: 'pdf-to-jpg',
   },
@@ -146,7 +141,6 @@ const tools: Tool[] = [
     title: 'แปลง JPG to PDF',
     description: 'รวมรูปภาพ JPG หลายไฟล์เป็นเอกสาร PDF พร้อมจัดลำดับภาพ',
     accepts: '.jpg,.jpeg,.png',
-    badge: 'พร้อมใช้',
     fields: ['ลากวางรูปภาพหลายไฟล์', 'เปลี่ยนลำดับรูปก่อนสร้าง PDF'],
     mode: 'jpg-to-pdf',
   },
@@ -155,7 +149,6 @@ const tools: Tool[] = [
     title: 'แปลง PDF to Excel',
     description: 'ดึงตารางและข้อมูลจาก PDF ออกเป็นไฟล์ Excel สำหรับตรวจสอบหรือแก้ไขต่อ',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['เลือกช่วงหน้าที่ต้องการแปลง', 'สร้างไฟล์ Excel จากข้อความใน PDF'],
     mode: 'pdf-to-excel',
   },
@@ -164,7 +157,6 @@ const tools: Tool[] = [
     title: 'แปลง PDF to Word',
     description: 'แปลงหน้า PDF เป็นเอกสาร Word โดยฝังภาพหน้าเอกสารเพื่อให้เปิดไฟล์ได้เสถียร',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['เลือกช่วงหน้าที่ต้องการแปลง', 'หนึ่งหน้า PDF เป็นภาพหนึ่งหน้าใน Word'],
     mode: 'pdf-to-word',
   },
@@ -173,7 +165,6 @@ const tools: Tool[] = [
     title: 'แปลง PDF to PowerPoint',
     description: 'แปลงหน้า PDF เป็นสไลด์ PowerPoint สำหรับนำเสนอหรือปรับแก้ในที่ประชุม',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['หนึ่งหน้า PDF เป็นหนึ่งสไลด์', 'รักษาหน้าตาเอกสารด้วยภาพหน้า PDF'],
     mode: 'pdf-to-powerpoint',
   },
@@ -182,7 +173,6 @@ const tools: Tool[] = [
     title: 'ใส่รหัสผ่าน PDF',
     description: 'กำหนดรหัสผ่านก่อนเปิดไฟล์ เพื่อปกป้องเอกสารภายในองค์กร',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['เข้ารหัสไฟล์ PDF จริงก่อนดาวน์โหลด', 'ไฟล์จะถามรหัสผ่านเมื่อเปิดอ่าน'],
     mode: 'password',
   },
@@ -191,7 +181,6 @@ const tools: Tool[] = [
     title: 'ใส่ลายน้ำ PDF',
     description: 'ใส่ลายน้ำข้อความหรือรูปภาพลงทุกหน้า พร้อมปรับขนาด มุมเอียง และความจาง',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['ลายน้ำข้อความภาษาไทยหรือรูปภาพ', 'ปรับขนาด มุมเอียง และความจางได้'],
     mode: 'watermark',
   },
@@ -200,16 +189,14 @@ const tools: Tool[] = [
     title: 'เซ็นเอกสาร PDF',
     description: 'พิมพ์ลายเซ็นหรือข้อความรับรอง แล้ววางลงบนหน้าที่ต้องการ',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['พิมพ์ลายเซ็นภาษาไทยได้', 'กำหนดหน้าและตำแหน่งก่อนบันทึก'],
     mode: 'sign',
   },
   {
     id: 'annotate',
     title: 'เพิ่มข้อมูลใน PDF',
-    description: 'เพิ่มข้อความ วันที่ หรือหมายเหตุภาษาไทยลงในเอกสาร PDF',
+    description: 'เพิ่มข้อความ วันที่ ครอบตัด เบลอ แทรกรูป หรือหมายเหตุภาษาไทยลงในเอกสาร PDF',
     accepts: '.pdf',
-    badge: 'พร้อมใช้',
     fields: ['เพิ่มข้อความหรือวันที่ลง PDF', 'กำหนดหน้าและตำแหน่งได้'],
     mode: 'annotate',
   },
@@ -228,7 +215,7 @@ const toolVisuals: Record<string, { icon: string; group: string; tone: string }>
   'pdf-to-powerpoint': { icon: 'PPT', group: 'แปลงไฟล์', tone: 'bg-orange-50 text-orange-700 border-orange-100' },
   password: { icon: '●●', group: 'ความปลอดภัย', tone: 'bg-rose-50 text-rose-700 border-rose-100' },
   watermark: { icon: 'WM', group: 'ความปลอดภัย', tone: 'bg-indigo-50 text-indigo-700 border-indigo-100' },
-  sign: { icon: 'ลง', group: 'แก้ไขเอกสาร', tone: 'bg-teal-50 text-teal-700 border-teal-100' },
+  sign: { icon: '✎', group: 'แก้ไขเอกสาร', tone: 'bg-teal-50 text-teal-700 border-teal-100' },
   annotate: { icon: 'T+', group: 'แก้ไขเอกสาร', tone: 'bg-slate-100 text-slate-700 border-slate-200' },
 };
 
@@ -4488,7 +4475,6 @@ export default function Home() {
   }
 
   const activeVisual = toolVisuals[activeTool.id] ?? toolVisuals.merge;
-  const readyToolCount = tools.filter((tool) => tool.mode !== 'planned').length;
 
   return (
     <main className="min-h-screen bg-[#f4f7fb] text-slate-950">
@@ -4535,11 +4521,7 @@ export default function Home() {
                 {usageSummary.configured ? 'Live' : 'กำลังเตรียมข้อมูล'}
               </span>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
-                <p className="text-xl font-black text-slate-950">{readyToolCount}</p>
-                <p className="mt-1 text-xs font-semibold text-slate-500">พร้อมใช้</p>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
               <div className="rounded bg-white px-3 py-3 text-center shadow-sm">
                 <p className="text-xl font-black text-slate-950">{formatUsageCount(usageSummary.visits)}</p>
                 <p className="mt-1 text-xs font-semibold text-slate-500">เข้าชม</p>
@@ -4576,17 +4558,9 @@ export default function Home() {
                           : 'border-slate-200 bg-white shadow-sm'
                       }`}
                     >
-                      <div className="mb-4 flex items-center justify-between gap-2">
+                      <div className="mb-4 flex items-center gap-2">
                         <span className={`grid h-10 min-w-10 place-items-center rounded border px-2 text-xs font-black ${visual.tone}`}>
                           {visual.icon}
-                        </span>
-                        <span className={`rounded-full border px-2.5 py-1 text-xs font-bold ${
-                          tool.mode === 'planned'
-                            ? 'border-slate-200 bg-slate-50 text-slate-500'
-                            : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                        }`}
-                        >
-                          {tool.badge}
                         </span>
                       </div>
                       <h3 className="text-base font-black tracking-normal text-slate-950">{tool.title}</h3>
@@ -4929,3 +4903,4 @@ export default function Home() {
     </main>
   );
 }
+
